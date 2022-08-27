@@ -22,9 +22,9 @@
 % (root_path)/(seqName)/calibration_(seqName).json
 % (root_path)/(seqName)/synctables_(seqName).json
 
-root_path = '[]' %Put your root path where sequence folders are locates
-seqName = '[]'  %Put your target sequence name here
-hd_index_list= 500:500; % Target frames you want to export ply files
+root_path = '/bigdata/rajrup/Dataset_Repo/panoptic-toolbox/data' %Put your root path where sequence folders are locates
+seqName = '160422_haggling1'  %Put your target sequence name here
+hd_index_list= 1:13750; % Target frames you want to export ply files
 
 %The followings are an example
 % root_path = '/posefs0c/panoptic' %An example
@@ -43,11 +43,11 @@ panopSyncTableFileName = sprintf('%s/%s/synctables_%s.json',root_path,seqName,se
 %Change the following if you want to save outputs on another folder
 plyOutputDir=sprintf('%s/%s/kinoptic_ptclouds',root_path,seqName);
 mkdir(plyOutputDir);
-disp(sprintf('PLY files will be saved in: %s\',plyOutputDir));
+disp(sprintf('PLY files will be saved in: %s',plyOutputDir));
 
 %Other parameters
-bVisOutput = 1; %Turn on, if you want to visualize what's going on
-bRemoveFloor= 1;  %Turn on, if you want to remove points from floor
+bVisOutput = 0; %Turn on, if you want to visualize what's going on
+bRemoveFloor= 0;  %Turn on, if you want to remove points from floor
 floorHeightThreshold = 0.5; % Adjust this (0.5cm ~ 7cm), if floor points are not succesfully removed
                             % Icreasing this may remove feet of people
 bRemoveWalls = 1; %Turn on, if you want to remove points from dome surface
@@ -261,7 +261,8 @@ for hd_index = hd_index_list
 %     end
 
     if isempty(all_point3d_panopticWorld)
-        break;
+        disp("No Point Cloud. Skip and continue ...");
+        continue;
     end
     
     %% Delete floor light
