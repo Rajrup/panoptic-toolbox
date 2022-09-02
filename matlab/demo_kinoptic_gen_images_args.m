@@ -40,6 +40,11 @@ function gen_ptcloud(arg1)
     syncTableFileName = sprintf('%s/%s/ksynctables_%s.json',root_path,seqName,seqName);
     panopcalibFileName = sprintf('%s/%s/calibration_%s.json',root_path,seqName,seqName);
     panopSyncTableFileName = sprintf('%s/%s/synctables_%s.json',root_path,seqName,seqName);
+    
+    rgbImgOutDir = sprintf('%s/%s/kinectImgs',root_path,seqName);
+    depthImgOutDir = sprintf('%s/%s/kinectDepthImgs',root_path,seqName);
+    mkdir(rgbImgOutDir);
+    mkdir(depthImgOutDir);
 
     % Output folder Path
     %Change the following if you want to save outputs on another folder
@@ -183,129 +188,42 @@ function gen_ptcloud(arg1)
                 view(2);
             end
 
+
             %% Project 3D points (from depth) to color image
             colors_inDepth = multiChannelInterp( double(rgbim)/255, ...
                 point2d_incolor(:,1)+1, point2d_incolor(:,2)+1, 'linear');
+            
+%             colors_inDepth_list_u8 = uint8(colors_inDepth * 255.0);
 
             colors_inDepth = reshape(colors_inDepth, [size(depthim,1), size(depthim,2), 3]);
             colorsv = reshape(colors_inDepth, [], 3);
 
-            % valid_mask = depthim~=0;
-            validMask = validMask(:) & ~isnan(point3d(:,1));
-            validMask = validMask(:) & ~isnan(colorsv(:,1));
-            %nonValidPixIdx = find(validMask(:)==0);
-            validPixIdx = find(validMask(:)==1);
-
-            if vis_output
-                %Note that this image has an artifact since no z-buffering are
-                %performed 
-                %That is, occluded part may extract colors from RGB image
-                figure; imshow(colors_inDepth); 
-                title('Depth map, after extracting colors from RGB image');
-            end
-
-            %% Extract color for depth camera
-            if vis_output
-                figure; scatter3(point3d(:,1),point3d(:,2),point3d(:,3),1,colorsv);  axis equal;
-                title('Pt cloud from Kinect1, after extracting colors');
-                view(2);
-            end
-
-            %% Transform Kinect Local to Panoptic World
-
-            % Kinect local coordinate is defined by depth camera coordinate
-            camName = sprintf('50_%02d', idk);
-            panoptic_calibData = panoptic_calibration.cameras{find(strcmp(panoptic_camNames, sprintf('50_%02d', idk)))};
-            M = [panoptic_calibData.R, panoptic_calibData.t];
-            T_panopticWorld2KinectColor = [M; [0 0 0 1]]; %Panoptic_world to Kinect_color
-            T_kinectColor2PanopticWorld = inv(T_panopticWorld2KinectColor);
-
-            scale_kinoptic2panoptic = eye(4);
-            scaleFactor = 100;%0.01; %centimeter to meter
-            scale_kinoptic2panoptic(1:3,1:3) = scaleFactor*scale_kinoptic2panoptic(1:3,1:3);
-
-            %T_kinectColor2KinectLocal = [calib_rgbCam.Mdist;[0 0 0 1]];  %Color2Depth camera coordinate
-            T_kinectColor2KinectLocal = camCalibData.M_color;%[camCalibData.M_color;[0 0 0 1]];  %Color2Depth camera coordinate
-            T_kinectLocal2KinectColor = inv(T_kinectColor2KinectLocal);
-
-            T_kinectLocal2PanopticWorld =  T_kinectColor2PanopticWorld* scale_kinoptic2panoptic* T_kinectLocal2KinectColor;
+            colors_inDepth_u8 = uint8(colors_inDepth * 255.0);
+            colorsv_u8 = uint8(colorsv * 255.0);
             
-%             fprintf("T_kinectLocal2PanopticWorld for camID %d camName %s\n", idk, camName);
-%             disp(T_kinectLocal2PanopticWorld);
-            %% Merge Multiple Kinects into world_kinect coordinate (1st Kinect's coordinate)
-            % Transform 3D points to kinect_world coordinate
-            %T_kinectLocal2KinectWorld = inv(camCalibData.M_world2sensor);       %kinectLocal to kinectWorld (1st Kinect's cooridnate)
-            %point3d_kinectWorld = T_kinectLocal2KinectWorld*[point3d'; ones(1, size(point3d,1))];
-            %point3d_kinectWorld = point3d_kinectWorld(1:3,:)';
-            %point3d_kinectWorld = double(point3d_kinectWorld);
-            %all_point3d_kinectWorld = [all_point3d_kinectWorld ; point3d_kinectWorld(validPixIdx,:)];
-            %all_colorsv = [all_colorsv ; colorsv(validPixIdx,:)];
+            rgbImgOutSubDir = sprintf('%s/50_%02d',rgbImgOutDir,idk);
+            depthImgOutSubDir = sprintf('%s/50_%02d',depthImgOutDir,idk);
+            if ~exist(rgbImgOutSubDir, 'dir')
+                mkdir(rgbImgOutSubDir);
+            end
+            if ~exist(depthImgOutSubDir, 'dir')
+                mkdir(depthImgOutSubDir);
+            end
 
+            rgbFileNameOut = sprintf('%s/50_%02d_%08d_transformed.png', rgbImgOutSubDir,idk,cindex);
+            depthFileNameOut = sprintf('%s/50_%02d_%08d_transformed.bin', depthImgOutSubDir,idk,cindex);
+            
+            colors_u8 = uint8(colors_inDepth*255.0);
+            point3d_float = single(point3d);
+            point3d_float(isnan(point3d_float)) = single(0);
 
-            %% Merge Multiple Kinects into panoptic_kinect coordinate
-            %Transform to panoptic coordinate
-            point3d_panopticWorld = T_kinectLocal2PanopticWorld*[point3d'; ones(1, size(point3d,1))];
-            point3d_panopticWorld = point3d_panopticWorld(1:3,:)';
-            point3d_panopticWorld = double(point3d_panopticWorld);
-
-            all_point3d_panopticWorld = [all_point3d_panopticWorld; point3d_panopticWorld(validPixIdx,:)];
-            all_colorsv = [all_colorsv ; colorsv(validPixIdx,:)];
-
+            imwrite(colors_u8, rgbFileNameOut);
+            fileID = fopen(depthFileNameOut,'w');
+            fwrite(fileID, point3d_float', 'float');
+            fclose(fileID);
+            fprintf('RGB file: %s\n', rgbFileNameOut);
+            fprintf('Depth file: %s\n', depthFileNameOut);
         end
-
-        %% Visualize Point Cloud
-    %     if bVisOutput
-    %         %sampling = 20;   %Too slow to visualize all points
-    %         figure; scatter3(all_point3d_kinectWorld(1:sampling:end,1),all_point3d_kinectWorld(1:sampling:end,2),all_point3d_kinectWorld(1:sampling:end,3),1, all_colorsv(1:sampling:end,:));  axis equal;
-    %         %figure; scatter3(all_point3d_panopticWorld(1:sampling:end,1),all_point3d_panopticWorld(1:sampling:end,2),all_point3d_panopticWorld(1:sampling:end,3),1, all_colorsv(1:sampling:end,:));  axis equal;
-    %         title('Pt cloud from all kinects (sampled by 20 for faster visualization)');
-    %         view(2);
-    %     end
-
-        if isempty(all_point3d_panopticWorld)
-            disp("No Point Cloud. Skip and continue ...");
-            continue;
-        end
-
-        %% Delete floor light
-        if bRemoveFloor
-
-            % Delete floor points
-            % Crop floor 
-            floorPtIdx =(find(all_point3d_panopticWorld(:,2)>-floorHeightThreshold));      %Up-direction => negative Y axis
-            all_point3d_panopticWorld(floorPtIdx,:) =[];
-            all_colorsv(floorPtIdx,:) =[];
-
-            %%Delete floor light
-            ptCopy = all_point3d_panopticWorld;
-            ptCopy(:,2) =0;
-            ptCopy = ptCopy.^2;
-            distFromCenter =sqrt(sum(ptCopy,2));
-            outliers =(find(distFromCenter>225));      %Up-direction => negative Y axis
-            all_point3d_panopticWorld(outliers,:) =[];
-            all_colorsv(outliers,:) =[];
-        end
-
-
-
-        %% Save point cloud as a ply file
-        %simple_ply_write2b_color( all_point3d_kinectWorld, all_colorsv*255, sprintf('%s/frame%08d.ply', plyOutputDir, frameIdx) );
-
-        out_pc = pointCloud(all_point3d_panopticWorld);
-        out_pc.Color = uint8(round(all_colorsv*255));
-
-        %% Visualize Point Cloud
-        if bVisOutput
-            close all;
-            pcshow(out_pc);
-            title('Pt cloud from all kinects after filtering');
-            view(2);
-        end   
-
-        pcwrite(out_pc,out_fileName,'PLYFormat','ascii');
-
-
-
     end
 end
 

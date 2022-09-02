@@ -1,5 +1,5 @@
 function extract_depth_imgs(arg1)
-    root_path = '/bigdata/rajrup/Dataset_Repo/panoptic-toolbox/data' %Put your root path where sequence folders are locates
+    root_path = '/data/panoptic-toolbox/data' %Put your root path where sequence folders are locates
     % seqName = '160422_haggling1'  %Put your target sequence name here
     seqName = arg1;
     hd_index_list= 1:13750; % Target frames you want to export ply files
@@ -55,6 +55,7 @@ function extract_depth_imgs(arg1)
             rgbim = imread(rgbFileName);
             %depthim_raw = kdata.vobj{idk}.readDepthIndex(dindex);  % cindex: 1 based
             depthim = readDepthIndex_1basedIdx(depthFileName, hd_index);
+            depthim16 = uint16(depthim);
             
             %Check valid pixels
             validMask = depthim~=0; %Check non-valid depth pixels (which have 0)
@@ -67,7 +68,7 @@ function extract_depth_imgs(arg1)
                 figure; imshow(validMask*255); title('Validity Mask');
             end
             
-            imwrite(depthim, depthImgFileNameOutput);
+            imwrite(depthim16, depthImgFileNameOutput);
             
         end
     end

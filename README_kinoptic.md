@@ -14,7 +14,7 @@ Follow these steps to set up a simple example:
 
 Assuming you want to donwload a sequence: named "160422_haggling1"
 ```
-./scripts/getDpanopticHDoptic.sh 160422_haggling1
+./scripts/getData_kinoptic 160422_haggling1
 ```
 
 This script will download the following files. 
@@ -31,6 +31,10 @@ cd 160422_haggling1
 ../scripts/kinectImgsExtractor.sh
 ```
 
+Run the script `matlab/demo_kinoptic_gen_images_args.m` in matlab to extract RGB and depth frames for the C++ pipeline.
+```
+demo_kinoptic_gen_images_args('160422_haggling1')
+```
 ## 3. Run demo to generate point clouds from 10 kinects
 
 ```
