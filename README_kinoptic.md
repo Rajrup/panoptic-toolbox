@@ -24,13 +24,15 @@ This script will download the following files.
 * 160422_haggling1/kcalibration_160422_haggling1.json #multiple kinects calibration files
 * 160422_haggling1/kinectVideos/kinect_50_%d.mp4 #rgb video files
 
-## 2. Extract RGB frames
+## 2. Extract RGB+Depth frames
 
+Step 1: Extract RGB+Depth frames from the downloaded data
 ```
 cd 160422_haggling1
 ../scripts/kinectImgsExtractor.sh
 ```
 
+Step 2: Extract RGB+Depth frames required for the C++ pipeline 
 Run the script `matlab/demo_kinoptic_gen_images_args.m` in matlab to extract RGB and depth frames for the C++ pipeline.
 ```
 demo_kinoptic_gen_images_args('160422_haggling1')
