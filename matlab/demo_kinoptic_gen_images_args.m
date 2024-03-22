@@ -23,7 +23,7 @@
 % (root_path)/(seqName)/synctables_(seqName).json
 
 function gen_ptcloud(arg1)
-    root_path = '/data/panoptic-toolbox/data' %Put your root path where sequence folders are locates
+    root_path = '/data/panoptic-toolbox/'; %Put your root path where sequence folders are locates
     % seqName = '160422_haggling1'  %Put your target sequence name here
     seqName = arg1;
     hd_index_list= 1:13750; % Target frames you want to export ply files
@@ -43,8 +43,12 @@ function gen_ptcloud(arg1)
     
     rgbImgOutDir = sprintf('%s/%s/kinectImgs',root_path,seqName);
     depthImgOutDir = sprintf('%s/%s/kinectDepthImgs',root_path,seqName);
+    rawDepthImgOutDir = sprintf('%s/%s/kinectRawDepthImgs',root_path,seqName);
     mkdir(rgbImgOutDir);
     mkdir(depthImgOutDir);
+    mkdir(rawDepthImgOutDir);
+
+    SyncOutputFile= fopen(sprintf('%s/%s/sync_table_after_gen_images_test.txt', root_path, seqName),'w');
 
     % Output folder Path
     %Change the following if you want to save outputs on another folder
@@ -57,7 +61,7 @@ function gen_ptcloud(arg1)
     bRemoveFloor= 0;  %Turn on, if you want to remove points from floor
     floorHeightThreshold = 0.5; % Adjust this (0.5cm ~ 7cm), if floor points are not succesfully removed
                                 % Icreasing this may remove feet of people
-    bRemoveWalls = 1; %Turn on, if you want to remove points from dome surface
+    bRemoveWalls = 0; %Turn on, if you want to remove points from dome surface
 
     addpath('jsonlab');
     addpath('kinoptic-tools');
@@ -152,6 +156,11 @@ function gen_ptcloud(arg1)
                 figure; imagesc(depthim);  title('Depth Image');
                 figure; imshow(validMask*255); title('Validity Mask');
             end
+            
+            rawDepthFileNameOut = sprintf('%s/50_%02d_%08d.png', rawDepthImgOutDir,idk,dindex);
+            imwrite(uint16(depthim), rawDepthFileNameOut);
+            
+
 
             %% Back project depth to 3D points (in camera coordinate)
             camCalibData = kinect_calibration.sensors{idk};
@@ -166,8 +175,8 @@ function gen_ptcloud(arg1)
             nonValidPixIdx = find(validMask(:)==0);
 
 
-            point3d(nonValidPixIdx,:) = nan;
-            point2d_incolor(nonValidPixIdx,:) = nan;
+%             point3d(nonValidPixIdx,:) = nan;
+%             point2d_incolor(nonValidPixIdx,:) = nan;
 
     %         if vis_output
     %             figure; plot3(point3d(:,1),point3d(:,2),point3d(:,3),'.'); axis equal;  %Plot raw 3D points
@@ -211,7 +220,7 @@ function gen_ptcloud(arg1)
             end
 
             rgbFileNameOut = sprintf('%s/50_%02d_%08d_transformed.png', rgbImgOutSubDir,idk,cindex);
-            depthFileNameOut = sprintf('%s/50_%02d_%08d_transformed.bin', depthImgOutSubDir,idk,cindex);
+            depthFileNameOut = sprintf('%s/50_%02d_%08d_transformed.bin', depthImgOutSubDir,idk,dindex);
             
             colors_u8 = uint8(colors_inDepth*255.0);
             point3d_float = single(point3d);
@@ -223,6 +232,9 @@ function gen_ptcloud(arg1)
             fclose(fileID);
             fprintf('RGB file: %s\n', rgbFileNameOut);
             fprintf('Depth file: %s\n', depthFileNameOut);
+
+            fprintf(SyncOutputFile, 'SYNC - HD Index: %d, Cam ID: %d, Color Index: %d, Depth Index: %d\n', hd_index, idk, cindex, dindex);
+            
         end
     end
 end
