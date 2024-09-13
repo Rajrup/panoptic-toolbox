@@ -193,3 +193,5 @@ octave-workspace
 
 # data
 data/
+pipeline_data/
+*_mafia*/

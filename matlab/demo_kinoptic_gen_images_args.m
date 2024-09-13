@@ -22,11 +22,21 @@
 % (root_path)/(seqName)/calibration_(seqName).json
 % (root_path)/(seqName)/synctables_(seqName).json
 
-function gen_ptcloud(arg1)
+% demo_kinoptic_gen_images_args('160422_haggling1', 1, 14000)
+% demo_kinoptic_gen_images_args('160906_ian3', 1, 9000)
+% demo_kinoptic_gen_images_args('170307_dance5', 1, 12000)
+% demo_kinoptic_gen_images_args('170915_office1', 1, 7000)
+% demo_kinoptic_gen_images_args('170915_toddler4', 1, 6000)
+% demo_kinoptic_gen_images_args('160906_pizza1', 1, 10000)
+% demo_kinoptic_gen_images_args('160906_band2', 1, 10000)
+% demo_kinoptic_gen_images_args('160224_ultimatum2', 1, 16000)
+% demo_kinoptic_gen_images_args('160226_mafia1', 1, 20000)
+
+function demo_kinoptic_gen_images_args(seq_name, start_id, end_id)
     root_path = '/data/panoptic-toolbox/'; %Put your root path where sequence folders are locates
     % seqName = '160422_haggling1'  %Put your target sequence name here
-    seqName = arg1;
-    hd_index_list= 1:13750; % Target frames you want to export ply files
+    seqName = seq_name;
+    hd_index_list= start_id:end_id; % Target frames you want to export ply files
 
     %The followings are an example
     % root_path = '/posefs0c/panoptic' %An example
@@ -41,14 +51,14 @@ function gen_ptcloud(arg1)
     panopcalibFileName = sprintf('%s/%s/calibration_%s.json',root_path,seqName,seqName);
     panopSyncTableFileName = sprintf('%s/%s/synctables_%s.json',root_path,seqName,seqName);
     
-    rgbImgOutDir = sprintf('%s/%s/kinectImgs',root_path,seqName);
+    rgbImgOutDir = sprintf('%s/%s/kinectRGBImgs',root_path,seqName);
     depthImgOutDir = sprintf('%s/%s/kinectDepthImgs',root_path,seqName);
     rawDepthImgOutDir = sprintf('%s/%s/kinectRawDepthImgs',root_path,seqName);
     mkdir(rgbImgOutDir);
     mkdir(depthImgOutDir);
-    mkdir(rawDepthImgOutDir);
+    %mkdir(rawDepthImgOutDir);
 
-    SyncOutputFile= fopen(sprintf('%s/%s/sync_table_after_gen_images_test.txt', root_path, seqName),'w');
+    SyncOutputFile= fopen(sprintf('%s/%s/sync_table_gen_images_matlab.txt', root_path, seqName),'w');
 
     % Output folder Path
     %Change the following if you want to save outputs on another folder
@@ -139,7 +149,7 @@ function gen_ptcloud(arg1)
 
             % Extract image and depth
             %rgbim_raw = kdata.vobj{idk}.readIndex(cindex); % cindex: 1 based
-            rgbFileName = sprintf('%s/50_%02d/50_%02d_%08d.jpg',kinectImgDir,idk,idk,cindex);
+            rgbFileName = sprintf('%s/50_%02d/50_%02d_%08d.png',kinectImgDir,idk,idk,cindex);
             depthFileName = sprintf('%s/KINECTNODE%d/depthdata.dat',kinectDepthDir,idk);
 
             rgbim = imread(rgbFileName); % cindex: 1 based
@@ -157,8 +167,8 @@ function gen_ptcloud(arg1)
                 figure; imshow(validMask*255); title('Validity Mask');
             end
             
-            rawDepthFileNameOut = sprintf('%s/50_%02d_%08d.png', rawDepthImgOutDir,idk,dindex);
-            imwrite(uint16(depthim), rawDepthFileNameOut);
+            %rawDepthFileNameOut = sprintf('%s/50_%02d_%08d.png', rawDepthImgOutDir,idk,dindex);
+            %imwrite(uint16(depthim), rawDepthFileNameOut);
             
 
 

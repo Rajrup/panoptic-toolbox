@@ -14,7 +14,7 @@ Follow these steps to set up a simple example:
 
 Assuming you want to donwload a sequence: named "160422_haggling1"
 ```
-./scripts/getData_kinoptic 160422_haggling1
+./scripts/getData_kinoptic.sh 160422_haggling1
 ```
 
 This script will download the following files. 
@@ -29,7 +29,8 @@ This script will download the following files.
 Step 1: Extract RGB+Depth frames from the downloaded data
 ```
 cd 160422_haggling1
-../scripts/kinectImgsExtractor.sh
+../scripts/kinectImgsExtractor.sh       # extracts RGB in .jpg format
+../scripts/kinectImgsExtractor.sh png   # extracts RGB in .png format 
 ```
 
 Step 2: Extract RGB+Depth frames required for the C++ pipeline 
