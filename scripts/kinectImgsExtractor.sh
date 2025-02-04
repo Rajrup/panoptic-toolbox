@@ -7,8 +7,8 @@
 
 fmt=${1-jpg}
 
-inputFolderName=kinectVideos
-outputFolderName=kinectImgs
+inputFolderName=kinectRawColorVideos
+outputFolderName=kinectRawColorImgs
 camIdx=-1;
 for p in 50
 	do

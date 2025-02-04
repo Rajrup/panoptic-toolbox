@@ -41,16 +41,16 @@ $WGET $mO ksynctables_${datasetName}.json http://domedb.perception.cs.cmu.edu/we
 #####################
 # Download kinect rgb videos
 #####################
-mkdir -p kinectVideos
+mkdir -p kinectRawColorVideos
 panel=50
 nodes=(1 2 3 4 5 6 7 8 9 10)
 for (( c=0; c<$numKinectViews; c++))
 do
-  fileName=$(printf "kinectVideos/kinect_%02d_%02d.mp4" ${panel} ${nodes[c]})
+  fileName=$(printf "kinectRawColorVideos/kinect_%02d_%02d.mp4" ${panel} ${nodes[c]})
   echo $fileName;
   #Download and delete if the file is blank
-	#cmd=$(printf "$WGET $mO kinectVideos/kinect_%02d_%02d.mp4 http://domedb.perception.cs.cmu.edu/webdata/dataset/$datasetName/videos/kinect_shared_crf0/${datasetName}_kinect%d.mp4 || rm -v $fileName" ${panel} ${nodes[c]} ${nodes[c]})
-	cmd=$(printf "$WGET $mO kinectVideos/kinect_%02d_%02d.mp4 http://domedb.perception.cs.cmu.edu/webdata/dataset/$datasetName/videos/kinect_shared_crf20/${datasetName}_kinect%d.mp4 || rm -v $fileName" ${panel} ${nodes[c]} ${nodes[c]})
+	#cmd=$(printf "$WGET $mO kinectRawColorVideos/kinect_%02d_%02d.mp4 http://domedb.perception.cs.cmu.edu/webdata/dataset/$datasetName/videos/kinect_shared_crf0/${datasetName}_kinect%d.mp4 || rm -v $fileName" ${panel} ${nodes[c]} ${nodes[c]})
+	cmd=$(printf "$WGET $mO kinectRawColorVideos/kinect_%02d_%02d.mp4 http://domedb.perception.cs.cmu.edu/webdata/dataset/$datasetName/videos/kinect_shared_crf20/${datasetName}_kinect%d.mp4 || rm -v $fileName" ${panel} ${nodes[c]} ${nodes[c]})
 	echo $cmd
 	eval $cmd
 done
@@ -58,16 +58,16 @@ done
 #####################
 # Download kinect depth videos
 #####################
-mkdir -p kinect_shared_depth
+mkdir -p kinectRawDepthVideos
 nodes=(1 2 3 4 5 6 7 8 9 10)
 for (( c=0; c<$numKinectViews; c++))
 do
-  subfolder=$(printf "kinect_shared_depth/KINECTNODE%d" ${nodes[c]})
+  subfolder=$(printf "kinectRawDepthVideos/KINECTNODE%d" ${nodes[c]})
   mkdir $subfolder;
-  fileName=$(printf "kinect_shared_depth/KINECTNODE%d/depthdata.dat" ${nodes[c]})
+  fileName=$(printf "kinectRawDepthVideos/KINECTNODE%d/depthdata.dat" ${nodes[c]})
   echo $fileName;
   #Download and delete if the file is blank
-	cmd=$(printf "$WGET $mO $fileName http://domedb.perception.cs.cmu.edu/webdata/dataset/$datasetName/$fileName || rm -v $fileName")
+	cmd=$(printf "$WGET $mO $fileName http://domedb.perception.cs.cmu.edu/webdata/dataset/$datasetName/kinect_shared_depth/KINECTNODE%d/depthdata.dat || rm -v $fileName" ${nodes[c]})
 	echo $cmd
 	eval $cmd
 done

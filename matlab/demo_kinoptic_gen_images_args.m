@@ -31,9 +31,10 @@
 % demo_kinoptic_gen_images_args('160906_band2', 1, 10000)
 % demo_kinoptic_gen_images_args('160224_ultimatum2', 1, 16000)
 % demo_kinoptic_gen_images_args('160226_mafia1', 1, 20000)
+% demo_kinoptic_gen_images_args('171026_pose3', 1, 8000)
 
 function demo_kinoptic_gen_images_args(seq_name, start_id, end_id)
-    root_path = '/data/panoptic-toolbox/'; %Put your root path where sequence folders are locates
+    root_path = '/bigdata2/rajrup/panoptic-toolbox/'; %Put your root path where sequence folders are locates
     % seqName = '160422_haggling1'  %Put your target sequence name here
     seqName = seq_name;
     hd_index_list= start_id:end_id; % Target frames you want to export ply files
@@ -44,8 +45,8 @@ function demo_kinoptic_gen_images_args(seq_name, start_id, end_id)
     % hd_index_list= 500:510; % Target frames you want to export ply files
 
     %Relative Paths
-    kinectImgDir = sprintf('%s/%s/kinectImgs',root_path,seqName);  
-    kinectDepthDir = sprintf('%s/%s/kinect_shared_depth',root_path,seqName);
+    kinectImgDir = sprintf('%s/%s/kinectExtractedColorImgs',root_path,seqName);  
+    kinectDepthDir = sprintf('%s/%s/kinectRawDepthVideos',root_path,seqName);
     calibFileName = sprintf('%s/%s/kcalibration_%s.json',root_path,seqName,seqName);
     syncTableFileName = sprintf('%s/%s/ksynctables_%s.json',root_path,seqName,seqName);
     panopcalibFileName = sprintf('%s/%s/calibration_%s.json',root_path,seqName,seqName);
@@ -53,10 +54,12 @@ function demo_kinoptic_gen_images_args(seq_name, start_id, end_id)
     
     rgbImgOutDir = sprintf('%s/%s/kinectRGBImgs',root_path,seqName);
     depthImgOutDir = sprintf('%s/%s/kinectDepthImgs',root_path,seqName);
+    rawColorImgOutDir = sprintf('%s/%s/kinectRawColorImgs',root_path,seqName);
     rawDepthImgOutDir = sprintf('%s/%s/kinectRawDepthImgs',root_path,seqName);
     mkdir(rgbImgOutDir);
     mkdir(depthImgOutDir);
-    %mkdir(rawDepthImgOutDir);
+    mkdir(rawColorImgOutDir);
+    mkdir(rawDepthImgOutDir);
 
     SyncOutputFile= fopen(sprintf('%s/%s/sync_table_gen_images_matlab.txt', root_path, seqName),'w');
 
@@ -166,11 +169,28 @@ function demo_kinoptic_gen_images_args(seq_name, start_id, end_id)
                 figure; imagesc(depthim);  title('Depth Image');
                 figure; imshow(validMask*255); title('Validity Mask');
             end
-            
-            %rawDepthFileNameOut = sprintf('%s/50_%02d_%08d.png', rawDepthImgOutDir,idk,dindex);
-            %imwrite(uint16(depthim), rawDepthFileNameOut);
-            
 
+            fprintf('Color resolution (width x height): %d x %d\n', size(rgbim,2), size(rgbim,1));
+            fprintf('Depth resolution (width x height): %d x %d\n', size(depthim,2), size(depthim,1));
+            fprintf('Mask resolution (width x height): %d x %d\n', size(validMask,2), size(validMask,1));
+
+            rawColorImgOutSubDir = sprintf('%s/50_%02d',rawColorImgOutDir,idk);
+            rawDepthImgOutSubDir = sprintf('%s/50_%02d',rawDepthImgOutDir,idk);
+            if ~exist(rawColorImgOutSubDir, 'dir')
+                mkdir(rawColorImgOutSubDir);
+            end
+            if ~exist(rawDepthImgOutSubDir, 'dir')
+                mkdir(rawDepthImgOutSubDir);
+            end
+            
+            rawColorFileNameOut = sprintf('%s/50_%02d_%08d.png', rawColorImgOutSubDir,idk,cindex);
+            imwrite(rgbim, rawColorFileNameOut);
+
+            rawDepthFileNameOut = sprintf('%s/50_%02d_%08d.png', rawDepthImgOutSubDir,idk,dindex);
+            imwrite(uint16(depthim), rawDepthFileNameOut);
+
+            fprintf('Raw RGB file: %s\n', rawColorFileNameOut);
+            fprintf('Raw Depth file: %s\n', rawDepthFileNameOut);
 
             %% Back project depth to 3D points (in camera coordinate)
             camCalibData = kinect_calibration.sensors{idk};
@@ -185,12 +205,12 @@ function demo_kinoptic_gen_images_args(seq_name, start_id, end_id)
             nonValidPixIdx = find(validMask(:)==0);
 
 
-%             point3d(nonValidPixIdx,:) = nan;
-%             point2d_incolor(nonValidPixIdx,:) = nan;
+            % point3d(nonValidPixIdx,:) = nan;
+            % point2d_incolor(nonValidPixIdx,:) = nan;
 
-    %         if vis_output
-    %             figure; plot3(point3d(:,1),point3d(:,2),point3d(:,3),'.'); axis equal;  %Plot raw 3D points
-    %         end
+            % if vis_output
+            %     figure; plot3(point3d(:,1),point3d(:,2),point3d(:,3),'.'); axis equal;  %Plot raw 3D points
+            % end
 
             %% Filtering based on the distance from the dome center
             domeCenter_kinectlocal = camCalibData.domeCenter;
@@ -205,6 +225,11 @@ function demo_kinoptic_gen_images_args(seq_name, start_id, end_id)
                 figure; plot3(point3d(:,1),point3d(:,2),point3d(:,3),'.'); axis equal;  %Plot raw 3D points
                 title('Unprojecting Depth from Kinect1 (after filtering dome wall');
                 view(2);
+            end
+
+            % Press any key to continue
+            if vis_output
+                pause;
             end
 
 
